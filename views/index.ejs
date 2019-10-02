@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <title>경북대학교 빈 강의실 찾기</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="theme-color" content="#fafafa">
+
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1><span class="knu">경북대학교</span> 빈 강의실 찾기</h1>
+    </header>
+
+    <section>
+      <label for="inp"></label>
+      <input type="text" id="inp"/>
+      <h3 id="res"></h3>
+    </section>
+
+    <!--
+    <footer style="padding-top: 50px;">
+      <p>시간표에 의존한 정보만 보여줍니다. 참고용으로만 사용하기 바랍니다.</p>
+    </footer>
+    -->
+
+    <script>
+      let time_to_hours_t = (h, m) => {
+        return (h - 8) * 2 - ((m >= 0 && m < 30) ? 1 : 0);
+        // 0교시 고려 안함
+      }
+
+      let inp = document.getElementById('inp');
+      let res = document.getElementById('res');
+
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {  // ??? 개구데기
+          console.log('triggered');
+
+          let val = inp.value;
+          console.log(val);
+
+          // 예외처리 필요
+          let [building, classroom] = val.split(/[- ]/);
+
+          let d = new Date();
+          let day = d.getDay();
+          let hour = time_to_hours_t(d.getHours(), d.getMinutes());
+
+          let obj = {'building': building, 'classroom': classroom, 'day': day, 'hour': hour};
+
+          let xhr = new XMLHttpRequest();
+          xhr.open('POST', '/');
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.responseType = 'json';
+          xhr.send(JSON.stringify(obj));
+
+          xhr.onreadystatechange = (e) => {
+            if (xhr.readyState === xhr.LOADING) {
+              console.log('xhr.LOADING');
+              res.innerHTML = '로드 중...'
+            } else if (xhr.readyState === xhr.DONE) {
+              console.log('xhr.DONE');
+              if (xhr.status === 200) {
+                console.log('success');
+                console.log(xhr.response);
+                // res.innerHTML = xhr.response;
+
+                let r = xhr.response;
+                if (!r['status']) {  // 빔
+                  res.innerHTML = `${building}-${classroom}호는 <span class='empty'>비어 있음</span>`;
+                } else {  // 안빔
+                  res.innerHTML = `${building}-${classroom}호는 <span class='using'>사용 중</span> (${r['title']} - ${r['instructor']})`;
+                }
+              } else {
+                console.log('err');
+              }
+            }
+          };
+
+        }
+
+      });
+
+    </script>
+  </body>
+</html>
